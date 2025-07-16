@@ -67,8 +67,10 @@ if __name__ == "__main__":
         height, width = cfgs.dataset.shape[1], cfgs.dataset.shape[2]
         target_size = (height, width)
 
+    # 使用配置文件中的数据集路径
+    dataset_path = getattr(cfgs.dataset, 'root_path', cfgs.path_dataset)
     train_loader, val_loader, test_loader = get_loader(
-        cfgs.dataset.name, cfgs.path_dataset, cfgs.train.bs, cfgs.nworker, target_size)
+        cfgs.dataset.name, dataset_path, cfgs.train.bs, cfgs.nworker, target_size)
     print("Complete dataload")
 
     ## Trainer
