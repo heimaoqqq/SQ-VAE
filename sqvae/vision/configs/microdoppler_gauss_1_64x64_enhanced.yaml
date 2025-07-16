@@ -1,0 +1,38 @@
+path_specific: "microdoppler_sqvae_gaussian_1_64x64_enhanced/"
+
+dataset:
+  name: 'CelebA'  # 使用CelebA架构，但数据来自MicroDoppler
+  shape: (3, 64, 64)  # 遵循原项目：先缩放到64×64
+  dim_x: 12288 # 3 * 64 * 64
+  num_users: 31
+  root_path: "/kaggle/input/dataset"
+
+model:
+  name: "GaussianSQVAE"
+  log_param_q_init: 2.995732273553991  # log(20.0) - 与CelebA完全一致
+  param_var_q: "gaussian_1"
+
+network:
+  name: "resnet"  # 使用原项目的net_64架构
+  num_rb: 10  # 增加ResBlock数量：6 → 10，提升表示能力
+
+train:
+  bs: 16  # 64×64分辨率可以用更大的批次
+  lr: 0.0001  # 原项目学习率
+  epoch_max: 100  # 增加训练轮数：50 → 100，充分收敛
+
+flags:
+  arelbo: True
+  bn: True
+  decay: True
+  noprint: True
+  save: True
+  var_q: False
+
+quantization:
+  size_dict: 512   # 与CelebA一致
+  dim_dict: 64     # 与CelebA一致
+  temperature:
+    init: 1.0      # 原项目温度设置
+    decay: 0.00001
+    min: 0.1
