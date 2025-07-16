@@ -113,6 +113,7 @@ class GaussianSQVAE(SQVAE):
         if self.use_perceptual_loss:
             # 使用感知损失
             combined_loss, mse, perc_loss = self.perceptual_loss_fn(x_reconst, x)
+            # 感知损失版本：直接使用combined_loss，不再应用arelbo变换
             loss_reconst = combined_loss
         else:
             # 传统MSE损失
@@ -123,7 +124,7 @@ class GaussianSQVAE(SQVAE):
                 loss_reconst = self.dim_x * torch.log(mse) / 2
             else:
                 loss_reconst = mse / (2*self.logvar_x.exp()) + self.dim_x * self.logvar_x / 2
-            perc_loss = torch.tensor(0.0)
+            perc_loss = torch.tensor(0.0).to(x.device)
 
         # Entire loss
         loss_all = loss_reconst + loss_latent

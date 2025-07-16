@@ -141,13 +141,15 @@ class MicroDopplerPerceptualLoss(nn.Module):
         """
         微多普勒专用组合损失
         """
-        # MSE损失
-        mse_loss = F.mse_loss(pred, target)
-        
+        bs = pred.shape[0]
+
+        # MSE损失 - 与原始代码保持一致的计算方式
+        mse_loss = F.mse_loss(pred, target, reduction="sum") / bs
+
         # 感知损失（权重较小，避免过度影响）
         perc_loss = self.perceptual_loss(pred, target)
-        
+
         # 组合损失
         total_loss = mse_loss + self.perceptual_weight * perc_loss
-        
+
         return total_loss, mse_loss, perc_loss
