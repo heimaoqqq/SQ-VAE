@@ -30,12 +30,18 @@ class GaussianSQVAETrainer(TrainerBase):
             x = x.cuda()
             _, _, loss = self.model(x, flg_train=True, flg_quant_det=False)
             self.optimizer.zero_grad()
-            loss["all"].backward()
+
+            # 确保损失是标量（多GPU时可能返回张量）
+            loss_all = loss["all"]
+            if loss_all.dim() > 0:
+                loss_all = loss_all.mean()
+
+            loss_all.backward()
             self.optimizer.step()
 
-            train_loss.append(loss["all"].detach().cpu().item())
-            ms_error.append(loss["mse"].detach().cpu().item())
-            perplexity.append(loss["perplexity"].detach().cpu().item())
+            train_loss.append(loss_all.detach().cpu().item())
+            ms_error.append(loss["mse"].detach().cpu().item() if loss["mse"].dim() == 0 else loss["mse"].mean().detach().cpu().item())
+            perplexity.append(loss["perplexity"].detach().cpu().item() if loss["perplexity"].dim() == 0 else loss["perplexity"].mean().detach().cpu().item())
 
         result = {}
         result["loss"] = np.asarray(train_loss).mean(0)
@@ -65,9 +71,14 @@ class GaussianSQVAETrainer(TrainerBase):
             for x, _ in data_loader:
                 x = x.cuda()
                 _, _, loss = self.model(x, flg_quant_det=flg_quant_det)
-                test_loss.append(loss["all"].item())
-                ms_error.append(loss["mse"].item())
-                perplexity.append(loss["perplexity"].item())
+                # 处理多GPU情况下的损失聚合
+                loss_all = loss["all"].mean() if loss["all"].dim() > 0 else loss["all"]
+                loss_mse = loss["mse"].mean() if loss["mse"].dim() > 0 else loss["mse"]
+                loss_perp = loss["perplexity"].mean() if loss["perplexity"].dim() > 0 else loss["perplexity"]
+
+                test_loss.append(loss_all.item())
+                ms_error.append(loss_mse.item())
+                perplexity.append(loss_perp.item())
         result = {}
         result["loss"] = np.asarray(test_loss).mean(0)
         result["mse"] = np.array(ms_error).mean(0)
