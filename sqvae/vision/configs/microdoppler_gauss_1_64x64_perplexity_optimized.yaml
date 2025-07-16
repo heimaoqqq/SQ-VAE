@@ -30,7 +30,7 @@ flags:
   var_q: False
 
 quantization:
-  size_dict: 256   # 减小codebook：更适合64×64分辨率
+  size_dict: 128   # 针对微多普勒优化：结构化数据用更小codebook
   dim_dict: 64     # 保持维度
   temperature:
     init: 1.0      # 原项目温度设置
