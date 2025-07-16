@@ -1,0 +1,38 @@
+path_specific: "microdoppler_sqvae_gaussian_1_256x256/"
+
+dataset:
+  name: 'MicroDoppler'
+  shape: (3, 256, 256)  # 保持原始高分辨率
+  dim_x: 196608 # 3 * 256 * 256
+  num_users: 31
+  root_path: "/kaggle/input/dataset"
+
+model:
+  name: "GaussianSQVAE"
+  log_param_q_init: 2.995732273553991  # log(20.0)
+  param_var_q: "gaussian_1"
+
+network:
+  name: "resnet256"  # 使用256×256架构
+  num_rb: 6  # 适应高分辨率
+
+train:
+  bs: 8   # 256×256需要更小的批次
+  lr: 0.0001  # 保持相同学习率
+  epoch_max: 50
+
+flags:
+  arelbo: True
+  bn: True
+  decay: True
+  noprint: True
+  save: True
+  var_q: False
+
+quantization:
+  size_dict: 512   # 保持相同codebook大小进行公平对比
+  dim_dict: 64     # 保持相同
+  temperature:
+    init: 1.0      # 保持相同温度设置
+    decay: 0.00001
+    min: 0.1
