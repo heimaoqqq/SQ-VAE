@@ -28,7 +28,7 @@ class GaussianSQVAETrainer(TrainerBase):
                     step, self.cfgs.quantization.temperature)
                 self.model.module.quantizer.set_temperature(temperature_current)
             x = x.cuda()
-            _, _, loss = self.model(x, flg_train=True, flg_quant_det=False)
+            _, _, loss = self.model(x, True, False)
             self.optimizer.zero_grad()
 
             # 确保损失是标量（多GPU时可能返回张量）
@@ -70,7 +70,7 @@ class GaussianSQVAETrainer(TrainerBase):
         with torch.no_grad():
             for x, _ in data_loader:
                 x = x.cuda()
-                _, _, loss = self.model(x, flg_quant_det=flg_quant_det)
+                _, _, loss = self.model(x, False, flg_quant_det)
                 # 处理多GPU情况下的损失聚合
                 loss_all = loss["all"].mean() if loss["all"].dim() > 0 else loss["all"]
                 loss_mse = loss["mse"].mean() if loss["mse"].dim() > 0 else loss["mse"]

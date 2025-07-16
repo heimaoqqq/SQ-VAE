@@ -113,7 +113,7 @@ class TrainerBase(nn.Module):
         self.model.eval()
         x = next(self.test_loader.__iter__())[0]
         x = x[off_set:off_set+nrows*ncols].cuda()
-        output = self.model(x, flg_train=False, flg_quant_det=True)
+        output = self.model(x, False, True)
         x_tilde = output[0]
         images_original = x.cpu().data.numpy()
         images_reconst = x_tilde.cpu().data.numpy()
@@ -126,7 +126,7 @@ class TrainerBase(nn.Module):
         self.model.eval()
         x = next(self.test_loader.__iter__())[0]
         x = x[:nrows*ncols].cuda()
-        output = self.model(x, flg_train=False, flg_quant_det=True)
+        output = self.model(x, False, True)
         x_tilde = output[0]
         x_cat = torch.cat([x, x_tilde], 0)
         images = x_cat.cpu().data.numpy()
@@ -140,7 +140,7 @@ class TrainerBase(nn.Module):
         y[:, 0, :, :] = y[:, 0, :, :] * 255.0
         y_long = y
         y = y[:, 0, :, :]
-        output = self.model(y, flg_train=False, flg_quant_det=True)
+        output = self.model(y, False, True)
         label_tilde = output[0]
         label_real = idx_to_onehot(y_long)
         label_batch_predict = generate_label(label_tilde[:,:19,:,:], x.shape[-1])
