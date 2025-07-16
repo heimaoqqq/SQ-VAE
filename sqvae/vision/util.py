@@ -58,26 +58,34 @@ def get_loader(dataset, path_dataset, bs=64, n_work=2, target_size=None):
             num_workers=n_work, pin_memory=False
         )
     elif dataset == "CelebA":
-        preproc_transform = transforms.Compose([
-            transforms.CenterCrop(140),
-            transforms.Resize((64, 64)),
-            transforms.ToTensor(),
-        ])
-        dset_train = datasets.CelebA(os.path.join(path_dataset, "CelebA/"), split="train", target_type="attr",
-            transform=preproc_transform, target_transform=None, download=True)
-        dset_valid = datasets.CelebA(os.path.join(path_dataset, "CelebA/"), split="valid", target_type="attr",
-            transform=preproc_transform, target_transform=None, download=True)
-        dset_test = datasets.CelebA(os.path.join(path_dataset, "CelebA/"), split="test", target_type="attr",
-            transform=preproc_transform, target_transform=None, download=True)
-        train_loader = torch.utils.data.DataLoader(dset_train,
-            batch_size=bs, shuffle=True, num_workers=n_work, pin_memory=False
-        )
-        val_loader = torch.utils.data.DataLoader(dset_valid,
-            batch_size=bs, shuffle=False, num_workers=n_work, pin_memory=False
-        )
-        test_loader = torch.utils.data.DataLoader(dset_test,
-            batch_size=bs, shuffle=False, num_workers=n_work, pin_memory=False
-        )
+        # 检查是否是MicroDoppler数据（通过路径判断）
+        if "kaggle" in path_dataset and "dataset" in path_dataset:
+            # 使用MicroDoppler数据但CelebA网络架构
+            if target_size is None:
+                target_size = (64, 64)  # CelebA默认64×64
+            train_loader, val_loader, test_loader = get_loader_microdoppler(path_dataset, bs, n_work, target_size)
+        else:
+            # 原始CelebA数据
+            preproc_transform = transforms.Compose([
+                transforms.CenterCrop(140),
+                transforms.Resize((64, 64)),
+                transforms.ToTensor(),
+            ])
+            dset_train = datasets.CelebA(os.path.join(path_dataset, "CelebA/"), split="train", target_type="attr",
+                transform=preproc_transform, target_transform=None, download=True)
+            dset_valid = datasets.CelebA(os.path.join(path_dataset, "CelebA/"), split="valid", target_type="attr",
+                transform=preproc_transform, target_transform=None, download=True)
+            dset_test = datasets.CelebA(os.path.join(path_dataset, "CelebA/"), split="test", target_type="attr",
+                transform=preproc_transform, target_transform=None, download=True)
+            train_loader = torch.utils.data.DataLoader(dset_train,
+                batch_size=bs, shuffle=True, num_workers=n_work, pin_memory=False
+            )
+            val_loader = torch.utils.data.DataLoader(dset_valid,
+                batch_size=bs, shuffle=False, num_workers=n_work, pin_memory=False
+            )
+            test_loader = torch.utils.data.DataLoader(dset_test,
+                batch_size=bs, shuffle=False, num_workers=n_work, pin_memory=False
+            )
     elif dataset == "CIFAR10":
         preproc_transform = transforms.Compose([
             transforms.ToTensor(),

@@ -1,7 +1,7 @@
 path_specific: "microdoppler_sqvae_gaussian_1_64x64/"
 
 dataset:
-  name: 'MicroDoppler'
+  name: 'CelebA'  # 使用CelebA架构，但数据来自MicroDoppler
   shape: (3, 64, 64)  # 遵循原项目：先缩放到64×64
   dim_x: 12288 # 3 * 64 * 64
   num_users: 31
