@@ -30,7 +30,7 @@ flags:
   var_q: False
 
 quantization:
-  size_dict: 128   # 针对微多普勒优化：结构化数据用更小codebook
+  size_dict: 256   # 基于研究调研：MNIST用256，微多普勒复杂度介于MNIST和CIFAR10之间
   dim_dict: 64     # 保持维度
   temperature:
     init: 1.0      # 原项目温度设置
