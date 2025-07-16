@@ -11,6 +11,7 @@ import networks.celeba as net_celeba
 import networks.celebamask_hq as net_celebamask_hq
 import networks.net_microdoppler as net_microdoppler
 from third_party.ive import ive
+from perceptual_loss import MicroDopplerPerceptualLoss
 
 
 def weights_init(m):
@@ -97,22 +98,42 @@ class GaussianSQVAE(SQVAE):
         self.flg_arelbo = flgs.arelbo # Use MLE for optimization of decoder variance
         if not self.flg_arelbo:
             self.logvar_x = nn.Parameter(torch.tensor(np.log(0.1)))
+
+        # 添加感知损失支持
+        self.use_perceptual_loss = getattr(flgs, 'perceptual_loss', False)
+        if self.use_perceptual_loss:
+            self.perceptual_loss_fn = MicroDopplerPerceptualLoss(
+                perceptual_weight=getattr(flgs, 'perceptual_weight', 0.05)
+            )
     
     def _calc_loss(self, x_reconst, x, loss_latent):
         bs = x.shape[0]
-        # Reconstruction loss
-        mse = F.mse_loss(x_reconst, x, reduction="sum") / bs
-        if self.flg_arelbo:
-            # "Preventing Posterior Collapse Induced by Oversmoothing in Gaussian VAE"
-            # https://arxiv.org/abs/2102.08663
-            loss_reconst = self.dim_x * torch.log(mse) / 2
+
+        # 基础重建损失
+        if self.use_perceptual_loss:
+            # 使用感知损失
+            combined_loss, mse, perc_loss = self.perceptual_loss_fn(x_reconst, x)
+            loss_reconst = combined_loss
         else:
-            loss_reconst = mse / (2*self.logvar_x.exp()) + self.dim_x * self.logvar_x / 2
+            # 传统MSE损失
+            mse = F.mse_loss(x_reconst, x, reduction="sum") / bs
+            if self.flg_arelbo:
+                # "Preventing Posterior Collapse Induced by Oversmoothing in Gaussian VAE"
+                # https://arxiv.org/abs/2102.08663
+                loss_reconst = self.dim_x * torch.log(mse) / 2
+            else:
+                loss_reconst = mse / (2*self.logvar_x.exp()) + self.dim_x * self.logvar_x / 2
+            perc_loss = torch.tensor(0.0)
+
         # Entire loss
         loss_all = loss_reconst + loss_latent
         loss = dict(all=loss_all, mse=mse)
 
-        return loss 
+        # 添加感知损失信息
+        if self.use_perceptual_loss:
+            loss["perceptual_loss"] = perc_loss
+
+        return loss
 
 
 class VmfSQVAE(SQVAE):

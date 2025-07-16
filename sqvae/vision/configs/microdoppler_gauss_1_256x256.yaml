@@ -18,8 +18,8 @@ network:
 
 train:
   bs: 8   # 256×256需要更小的批次
-  lr: 0.00005  # 降低学习率：更稳定的训练
-  epoch_max: 80  # 增加训练轮数：让困惑度有充分时间稳定
+  lr: 0.0001  # 提高学习率：避免训练停滞
+  epoch_max: 60  # 减少训练轮数：避免过拟合
 
 flags:
   arelbo: True
@@ -30,7 +30,7 @@ flags:
   var_q: False
 
 quantization:
-  size_dict: 512   # 256×256分辨率保持512：更高分辨率需要更大表达能力
+  size_dict: 256   # 减小codebook：提高利用率，减少过拟合
   dim_dict: 64     # 保持相同
   temperature:
     init: 1.0      # 保持相同温度设置
